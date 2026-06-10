@@ -1,0 +1,4 @@
+fixed the noslow thing 😭
+[+] a decent food noslow scriptless!!
+
+note: use mine or markos config for 100-150 ping and megas if lower.

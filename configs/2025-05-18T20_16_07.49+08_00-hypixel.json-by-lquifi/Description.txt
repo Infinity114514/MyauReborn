@@ -1,0 +1,11 @@
+**Myau 250516** Blatant 1.20
+
+**Hypixel Bedwars**
+
+- 5.6 bps tower (i'll check later if you can set higher with it being flagless, on the stairs infinite on bwp)
+- Made new script to disable **VELOCITY** if Scaffold is enabled and if your not moving just holding space switch to **HYPIXEL** tower.
+
+Scripts:
+**Server:** https://discord.gg/qBERhFCMpk
+**Scripts:** https://www.mediafire.com/file/7w2pkxuema4ptjq/scripts.rar/file
+**Mod:** https://codeberg.org/monster-energy/raven-script-loader/releases

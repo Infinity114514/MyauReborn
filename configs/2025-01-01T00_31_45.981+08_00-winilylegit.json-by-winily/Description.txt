@@ -1,0 +1,6 @@
+# Bedwars Winstreak Config
+you cycle through all the configs with [P]
+legit --> blatant --> legit w/ antivoid *(for when your beds gone)*
+on legit [V] is 0 100 velo and high aimassist for shitty cheaters
+only safewalk on legit config so if your too shit to bridge legit fuck you
+*do .bind list to see blatant binds*

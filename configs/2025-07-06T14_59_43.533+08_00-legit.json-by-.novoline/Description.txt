@@ -1,0 +1,3 @@
+legit is legit
+hacker is blatant config (enable velocity on it)
+and run is the blatant config but with velocity reverse and longjump high)

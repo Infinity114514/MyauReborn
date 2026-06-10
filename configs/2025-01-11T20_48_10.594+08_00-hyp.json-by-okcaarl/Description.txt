@@ -1,0 +1,3 @@
+** Blatant Bedwars Config**
+.b l for binds
+ version Myau-241222

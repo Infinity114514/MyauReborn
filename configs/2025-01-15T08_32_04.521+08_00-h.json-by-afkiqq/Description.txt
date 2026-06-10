@@ -1,0 +1,29 @@
+(S)
+
+update
+
+Scaffold less silent
+nuker slower
+(plz use safewalk if you can)
+
+
+(H)
+
+Updated killaura to target cheaters "most hurt time"
+
+Updated nuker made it not flag anymore (prob)
+
+Nofall Added delay
+
+Scaffold made a bit slower
+
+Longjump Fixed flag / lag back (jump when you use it) 'mod set to float'
+
+safewalk made it work with scaffold ???? (ish idk wut i updated people were yappin about it flaggin with scaffold)
+
+
+(T)
+
+Made scaffold slower ish cuz of flags
+
+Keep in mind T is only for scaffold i dont rly update it (btw it silents)

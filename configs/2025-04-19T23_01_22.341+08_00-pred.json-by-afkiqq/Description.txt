@@ -1,0 +1,4 @@
+H 1.20
+pred uhh ye
+
+TZ = float speed only use with speed bot!!!!

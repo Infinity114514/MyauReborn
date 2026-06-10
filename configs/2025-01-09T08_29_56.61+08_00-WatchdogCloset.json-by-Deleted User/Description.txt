@@ -1,0 +1,12 @@
+‎‎‎‎‎‎‎‎‎‎‎‎ㅤ
+**Hypixel Closet & Blatant Configs For Myau Public 241222**
+
+Bypasses Watchdog AC
+
+These configs may have problems if you find anything wrong with it DM or ping me
+
+Credit: @Deleted User, @amees cuz i used amees's closet config as a base for mine
+
+**Bind List
+Do .Bind List In The Minecraft Chat**
+## Download

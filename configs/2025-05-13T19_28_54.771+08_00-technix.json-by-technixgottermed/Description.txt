@@ -1,0 +1,12 @@
+## Blatant Config (1.20-1.20.1 via) | Hypixel
+> Scaffold Diagonally Bans
+> Works Best With Lowhop Script
+
+## BetterHUD
+> Playtime
+> TabGUI
+> BPS Display
+> Sprint Display
+> Toggle Alerts
+
+To use scripts: [Download Raven Script Loader](<https://codeberg.org/monster-energy/raven-script-loader/releases/tag/1.0.3>)

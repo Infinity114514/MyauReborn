@@ -1,0 +1,3 @@
+Fixed some random stuff works pretty well you gotta use 1.12.2 from #announcements 
+
+Pred ac config, I am yet to make it because im trying to see how blatant can you be with no flags

@@ -1,0 +1,10 @@
+- updated scaffold to work with keepy
+- fix somtimes getting flags when using killaura and bhop
+- updated bhop to be faster"
+- updated visuals 🔥
+- working nofall with no silent flags
+- updated tower to be much better
+- flat longjump
+- fixed autoblock somtimes getting random flags
+
+lmk if there is anything I should change and pls msg me if you have any problem,  I lasted two hours on 2 differnt accounts and an hour when staff were active

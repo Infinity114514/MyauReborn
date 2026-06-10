@@ -1,0 +1,10 @@
+Blatant config for MMC
+bypasses anticheat
+
+- no bednuker (flags & cant find one that works, **has autotool however**)
+- no scaffold (flags, **has safewalk bridge however**)
+
+Z - Killaura
+X - Speed
+
+**if ur gettin flagged/banned quickly change the velocity horizontal %**

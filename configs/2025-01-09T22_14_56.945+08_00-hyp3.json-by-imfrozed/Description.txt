@@ -1,0 +1,1 @@
+hvh configs spammer to toggle between them (they silent so use at own risk) .bind list

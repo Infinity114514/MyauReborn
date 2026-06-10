@@ -1,0 +1,4 @@
+chill blatant config
+velocity %20 use safewalk
+binds: scaffold F (to tower if needed) bednuker B speed&ts G killaura R
+to fuck around w nons

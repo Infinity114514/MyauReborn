@@ -1,0 +1,6 @@
+1.19-1.20.1 **Reworked** hypixel config
+- 5.95 bps tower
+- improved killaura
+- improved scaffold
+
+*note that the tower is slower to be more consistent*

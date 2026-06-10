@@ -1,0 +1,15 @@
+.bind list for binds
+
+H vanilla keep y sprint scaffold tower 
+
+T fast scaffold (speed 2)
+
+Update 
+
+- Autoblock
+- Scaffold?
+- Bednuker
+- made esp bypass
+
+
+CONFIG (S) is for silenting its kinda a silent safe config (semi blatant)

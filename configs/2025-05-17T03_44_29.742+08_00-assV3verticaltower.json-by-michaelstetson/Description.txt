@@ -1,0 +1,10 @@
+1.19-1.20.1 **Updated The Config For The New Myau Update** 
+
+Hypixel Blatant Config
+
+- 6.45 bps tower
+- improved scaffold
+
+*there are 2 versions*
+assV3verticaltower: hypixel tower mode to work better vertically
+assV3: vanilla tower

@@ -1,0 +1,13 @@
+Some good configs I made for this update!
+
+**Blatant:**
+Does not have KeepY, but uses Sprint Scaffold with Speed and has an above 100% AirMotion Tower
+
+**Blatant2:**
+Same thing as **Blatant**, but instead of fireball_high uses fireball_flat.
+
+**Reverse:**
+Basically same thing as **Blatant** again, but instead of 0,100 uses 95,100 reverse + Cotton Candy theme from Raven
+
+**Reverse2:**
+Same thing as **Reverse** but uses fireball flat!

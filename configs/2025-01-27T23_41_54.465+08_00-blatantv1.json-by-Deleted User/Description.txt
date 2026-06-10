@@ -1,0 +1,10 @@
+blatantv1: blatant config
+blatantbs: blatant config to use w raven (without noslow and velocity, use raven antiknockback and raven float noslow)
+
+do .b list to see binds ( https://discord.com/channels/1152531871511621702/1177313634871935056/1328302899511427145 merge binds / bind configs mod)
+
+use invmove, https://cdn.discordapp.com/attachments/1305486141113499738/1333460476104933436/airvelo.java?ex=6798f958&is=6797a7d8&hm=e2bbd8454bbd7ea335e0394f1df92d1e736fc43c65422f61e8fb922e74fb3306& and https://cdn.discordapp.com/attachments/1305486141113499738/1333460476390277252/Bhop2.java?ex=6798f958&is=6797a7d8&hm=c4475d219b1a968b0c5a9a5264117a9c03250b90206c07720652189c402f6455& on raven also can use https://cdn.discordapp.com/attachments/1305486141113499738/1333460476750856202/Disabler.java?ex=6798f958&is=6797a7d8&hm=581165c4415826d98842ecd6bdfeeed3d40c0eca2bedf3d76e2058a8b1063151&
+
+if you're using raven, use https://cdn.discordapp.com/attachments/1305486141113499738/1333460477145124884/MyauLongjump.java?ex=6798f958&is=6797a7d8&hm=c6ec54b165bdfb1af490c7d50ad6a962ee5558ec42c59b4d49c5d5f2d24b5340& , bind the script to your longjump bind **to disable airvelo and velocity when using longjump**
+
+extra: myau tnt fly for capturethewool https://cdn.discordapp.com/attachments/1305486141113499738/1333460477505966142/TNTFly.java?ex=6798f958&is=6797a7d8&hm=c339a28d38c62e5e3a958e77ef33e5ef82f406d80499dba6610fea96c71fe993& bind the script, put tnt down and press your bind: [showcase](https://cdn.discordapp.com/attachments/1332707855773728838/1332797724667412601/2025-01-25_22-35-52.mp4?ex=67988a5b&is=679738db&hm=adb85730ce5e35ce470ce0a20942796636b93b9ade20ee0cc8e8f7a570731e58) / <https://youtu.be/ZALFLQ3eLwI>

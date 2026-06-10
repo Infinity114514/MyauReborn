@@ -1,0 +1,14 @@
+H is for normal 1.8 myau
+
+.bind list for binds
+
+
+for H : USE SPEED (bhop) WITH TOWER to make it a bit faster
+
+
+Via is the same config with 10 aps (needs via fix) look https://discord.com/channels/1152531871511621702/1179100150581432450/1345490937475764336
+(1.12.2)
+
+If you want faster keep y / other useful scripts refer to :
+
+https://discord.gg/amx6SVDQ

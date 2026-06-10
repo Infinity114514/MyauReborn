@@ -1,0 +1,9 @@
+# Bedwars blatant config
+## scaffold:
+**bw -> 6.8 BPS (without speed)**
+**bw2 -> 9.3 BPS (with speed 2)**
+
+i recommend using spammer as a second scaffold button for speed 2
+
+every scaffold (except no sprint no keepy) will ban you quickly when staff are active
+type .b list to see the binds

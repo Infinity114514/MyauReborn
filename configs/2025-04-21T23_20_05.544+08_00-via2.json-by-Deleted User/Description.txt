@@ -1,0 +1,5 @@
+good config that lasts if it doesnt youre probably just bad
+if keepy starts to suicide for no reason use safewalk for a minute and use scaff again
+
+also the method:
+`.aimassist horizontalspeed 8 .aimassist verticalspeed 8 .t aimassist` for lock view and insane hvh assist

@@ -1,0 +1,11 @@
+If you get banned its lowkey a skill issue tbh
+
+Api : https://discord.gg/Q4AgkW8g3Y
+
+I forgot this server is not smart so i have to explain this config 😭 
+
+1.20~1.20.1
+
+.bind list to change binds
+
+Api isnt really needed its only to fix tower flagging on hit anything else ksyz has already added into meow!

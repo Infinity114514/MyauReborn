@@ -1,0 +1,13 @@
+***Features***
+- 0 Delay Eagle (update required)
+- 300ms Lagrange (update required)
+- Balanced Delay Velocity (ticks/chance) (update required) – may ghost without the update that allows tick adjustments; if it does, switch to Jump Mode
+- BedNuker – fully working
+- Keep-Y Scaffold (turned off for now since itll use the old keep-y in your guys builds which is dog shit but when update release put it to hypixel keep-y)
+
+***Binds***
+
+i = Skywars mode
+r = blink
+x = scaffold
+side-mouse-button3 = fast place

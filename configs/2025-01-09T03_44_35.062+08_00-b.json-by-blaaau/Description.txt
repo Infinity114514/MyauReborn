@@ -1,0 +1,6 @@
+blatant config that probably works
+
+**.b l** for binds (button2 is mouse wheel click)
++ my keyboard layout is german so blink is on "z" ig instead of "y"
+
+speed scaff, vanilla keepy, hypixel tower etc

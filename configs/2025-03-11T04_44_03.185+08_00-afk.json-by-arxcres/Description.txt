@@ -1,0 +1,7 @@
+@afk config for bedwars with no fall of basically
+
+f = scaffold
+r = killaura
+v = speed
+rest dont matter
+# NOT MY CONFIG ITS AFK EDITTED

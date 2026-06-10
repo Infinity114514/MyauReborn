@@ -1,0 +1,3 @@
+1.19-1.20.1 hypixel config *update*
+- 5.78 average bps tower
+- made tower infinite even tho you don't need it becouse you will never tower that much that you will flag

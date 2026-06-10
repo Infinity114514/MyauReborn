@@ -1,0 +1,10 @@
+**Blatant Config Bedwars**
+Info: You will need the viaforge mod from announcements https://discord.com/channels/1152531871511621702/1179100150581432450/1345490937475764336
+Binds list:
+Blink = 5
+Killaura = Capslock
+Velocity = Capslock
+Speed = b
+Scaffold = z
+Longjump = Left control
+Spammer = g (used to switch to a reverse velo)

@@ -1,0 +1,11 @@
+# Hypixel config v2 (Accurate addition) 
+
+**Fully remade the config**
+
+**added a accurate nickhider** (fixed it banning) real
+
+**made killaura never flag (w/o norotate)**
+
+**lasted about 5 hours**
+
+**added a accurate spammer 😭 **

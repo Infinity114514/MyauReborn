@@ -1,0 +1,27 @@
+v1	named	intermediary
+FIELD	myau/mixin/MixinEntity	Lnet/minecraft/world/World;	worldObj	field_70170_p
+FIELD	myau/mixin/MixinEntity	D	posX	field_70165_t
+FIELD	myau/mixin/MixinEntity	D	posY	field_70163_u
+FIELD	myau/mixin/MixinEntity	D	posZ	field_70161_v
+FIELD	myau/mixin/MixinEntity	D	motionX	field_70159_w
+FIELD	myau/mixin/MixinEntity	D	motionY	field_70181_x
+FIELD	myau/mixin/MixinEntity	D	motionZ	field_70179_y
+FIELD	myau/mixin/MixinEntity	F	rotationYaw	field_70177_z
+FIELD	myau/mixin/MixinEntity	F	rotationPitch	field_70125_A
+FIELD	myau/mixin/MixinEntity	F	prevRotationYaw	field_70126_B
+FIELD	myau/mixin/MixinEntity	F	prevRotationPitch	field_70127_C
+FIELD	myau/mixin/MixinEntity	Z	onGround	field_70122_E
+FIELD	myau/mixin/MixinEntityPlayerSP	F	lastReportedYaw	field_175164_bL
+FIELD	myau/mixin/MixinEntityPlayerSP	F	lastReportedPitch	field_175165_bM
+FIELD	myau/mixin/MixinEntityPlayerSP	F	renderArmYaw	field_71154_f
+FIELD	myau/mixin/MixinEntityPlayerSP	F	prevRenderArmYaw	field_71163_h
+FIELD	myau/mixin/MixinEntityRenderer	Lnet/minecraft/client/Minecraft;	mc	field_78531_r
+FIELD	myau/mixin/MixinEntityRenderer	F	thirdPersonDistance	field_78490_B
+FIELD	myau/mixin/MixinKeyBinding	Ljava/lang/String;	keyDescription	field_74515_c
+FIELD	myau/mixin/MixinMinecraft	I	leftClickCounter	field_71429_W
+FIELD	myau/mixin/MixinMinecraft	Lnet/minecraft/client/multiplayer/PlayerControllerMP;	playerController	field_71442_b
+FIELD	myau/mixin/MixinMinecraft	Lnet/minecraft/client/multiplayer/WorldClient;	theWorld	field_71441_e
+FIELD	myau/mixin/MixinMinecraft	Lnet/minecraft/client/entity/EntityPlayerSP;	thePlayer	field_71439_g
+FIELD	myau/mixin/MixinMinecraft	Lnet/minecraft/client/gui/GuiScreen;	currentScreen	field_71462_r
+METHOD	myau/mixin/MixinBlockModelRenderer	(Lnet/minecraft/world/IBlockAccess;Lnet/minecraft/client/resources/model/IBakedModel;Lnet/minecraft/block/Block;Lnet/minecraft/util/BlockPos;Lnet/minecraft/client/renderer/WorldRenderer;Z)Z	renderModelAmbientOcclusion	func_178265_a
+METHOD	myau/mixin/MixinEntity	()Z	isRiding	func_70115_ae
