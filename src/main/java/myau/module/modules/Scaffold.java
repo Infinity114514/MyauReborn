@@ -437,7 +437,7 @@ public class Scaffold extends Module {
                     if (this.towering && this.rotationMode.getValue() != 5
                             && (mc.thePlayer.motionY > 0.0 || mc.thePlayer.posY > (double)(this.startY + 1))) {
                         float yawDiff = MathHelper.wrapAngleTo180_float(this.yaw - event.getYaw());
-                        float tolerance = this.rotationTick >= 2 ? RandomUtil.nextFloat(80.0F, 85.0F) : RandomUtil.nextFloat(32.5F, 36.5F);
+                        float tolerance = this.rotationTick >= 2 ? RandomUtil.nextFloat(75.0F, 90.0F) : RandomUtil.nextFloat(32.5F, 36.5F);
                         if (Math.abs(yawDiff) > tolerance) {
                             float clampedYaw = RotationUtil.clampAngle(yawDiff, tolerance);
                             targetYaw = RotationUtil.quantizeAngle(event.getYaw() + clampedYaw);

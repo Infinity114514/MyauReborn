@@ -62,7 +62,7 @@ public class KillAura extends Module {
     private boolean fakeBlockState = false;
     private boolean blinkReset = false;
     private long attackDelayMS = 0L;
-    private int blockTick = 0;
+    public int blockTick = 0;
     private int lastTickProcessed;
 
     // 系统时间计时变量
@@ -553,8 +553,7 @@ public class KillAura extends Module {
             while (randomSlot == mc.thePlayer.inventory.currentItem) {
                 randomSlot = new Random().nextInt(9);
             }
-            PacketUtil.sendPacket(new C09PacketHeldItemChange(3));
-            PacketUtil.sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
+            this.stopBlock();
             hadTargetLastTick = false;
         }
         this.isBlocking = false;
