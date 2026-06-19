@@ -66,7 +66,11 @@ public class Scaffold extends Module {
     private boolean canplace = false;
     private boolean onairplace = false;
 
-    public final ModeProperty rotationMode = new ModeProperty("rotations", 2, new String[]{"NONE", "DEFAULT", "BACKWARDS", "SIDEWAYS","OFFSET","SIMPLE", "HYPIXEL"});
+    // SNAP mode variables
+    private boolean isSnapping = false;
+    private int snapCooldown = 0;
+
+    public final ModeProperty rotationMode = new ModeProperty("rotations", 2, new String[]{"NONE", "DEFAULT", "BACKWARDS", "SIDEWAYS","OFFSET","SNAP", "HYPIXEL"});
     public final ModeProperty moveFix = new ModeProperty("move-fix", 1, new String[]{"NONE", "SILENT"});
     public final ModeProperty sprintMode = new ModeProperty("sprint", 0, new String[]{"NONE", "VANILLA"});
     public final PercentProperty groundMotion = new PercentProperty("ground-motion", 100);
@@ -87,7 +91,7 @@ public class Scaffold extends Module {
         if (this.isTowering()) {
             return false;
         } else {
-            // SIMPLE 模式直接放行疾跑，允许玩家在合法移动状态下高速搭路
+            // SNAP 模式直接放行疾跑
             if (this.rotationMode.getValue() == 5) {
                 return false;
             }
@@ -126,10 +130,24 @@ public class Scaffold extends Module {
 
     private BlockData getBlockData() {
         int startY = MathHelper.floor_double(mc.thePlayer.posY);
+
+        // 基础计算逻辑
+        int targetX, targetZ;
+
+        if (this.rotationMode.getValue() == 5) {
+            // SNAP 模式：使用预判坐标，确保方块放在移动路径的前方
+            targetX = MathHelper.floor_double(mc.thePlayer.posX + mc.thePlayer.motionX * 2);
+            targetZ = MathHelper.floor_double(mc.thePlayer.posZ + mc.thePlayer.motionZ * 2);
+        } else {
+            // 其他模式：保持原有逻辑
+            targetX = MathHelper.floor_double(mc.thePlayer.posX);
+            targetZ = MathHelper.floor_double(mc.thePlayer.posZ);
+        }
+
         BlockPos targetPos = new BlockPos(
-                MathHelper.floor_double(mc.thePlayer.posX),
+                targetX,
                 (this.stage != 0 && !this.shouldKeepY ? Math.min(startY, this.startY) : startY) - 1,
-                MathHelper.floor_double(mc.thePlayer.posZ)
+                targetZ
         );
         if (!BlockUtil.isReplaceable(targetPos)) {
             return null;
@@ -264,6 +282,9 @@ public class Scaffold extends Module {
             if (this.rotationTick > 0) {
                 this.rotationTick--;
             }
+            if (this.snapCooldown > 0) {
+                this.snapCooldown--;
+            }
             if (mc.thePlayer.onGround) {
                 if (this.stage > 0) {
                     this.stage--;
@@ -306,12 +327,21 @@ public class Scaffold extends Module {
                         ? yawDiffTo180
                         : RotationUtil.wrapAngleDiff(currentYaw - 135.0F * ((currentYaw + 180.0F) % 90.0F < 45.0F ? 1.0F : -1.0F), event.getYaw());
 
-                // 修改后的 Mode 5 (SIMPLE)：寻找并锁死维持疾跑的最优转头角度 (面向物理移动向量)
+                // 修改后的 Mode 5 (SNAP)：SIDEWAYS 逻辑，带 3tick 冷却和恢复视角
                 if (this.rotationMode.getValue() == 5) {
-                    float moveYaw = MoveUtil.adjustYaw(mc.thePlayer.rotationYaw, (float) MoveUtil.getForwardValue(), (float) MoveUtil.getLeftValue());
-                    this.yaw = RotationUtil.quantizeAngle(moveYaw);
-                    this.pitch = RotationUtil.quantizeAngle(89.5F); // 极大幅度向下垂直看，使往前看的同时能够触及脚下方块网格
-                    this.canRotate = true;
+                    BlockData data = this.getBlockData();
+                    if (data != null && this.snapCooldown == 0) {
+                        this.yaw = RotationUtil.quantizeAngle(diagonalYaw);
+                        this.pitch = RotationUtil.quantizeAngle(85.0F); // 初始 Sideways 俯仰角，由后续射线修正
+                        this.canRotate = true;
+                        this.isSnapping = true;
+                    } else {
+                        // 冷却中或无方块放置需求时，恢复到客户端视角的未转头状态
+                        this.yaw = RotationUtil.quantizeAngle(mc.thePlayer.rotationYaw);
+                        this.pitch = RotationUtil.quantizeAngle(mc.thePlayer.rotationPitch);
+                        this.canRotate = true;
+                        this.isSnapping = false;
+                    }
                 } else if (!this.canRotate) {
                     switch (this.rotationMode.getValue()) {
                         case 1:
@@ -359,18 +389,10 @@ public class Scaffold extends Module {
                 BlockData blockData = this.getBlockData();
                 Vec3 hitVec = null;
                 if (blockData != null) {
-                    if (this.rotationMode.getValue() == 5) {
-                        // SIMPLE 模式：始终越过 raycast 射线计算循环，直接根据几何中心输出可放置点击向量
-                        BlockPos pos = blockData.blockPos();
-                        EnumFacing facing = blockData.facing();
-                        hitVec = new Vec3(
-                                (double)pos.getX() + 0.5 + (double)facing.getDirectionVec().getX() * 0.5,
-                                (double)pos.getY() + 0.5 + (double)facing.getDirectionVec().getY() * 0.5,
-                                (double)pos.getZ() + 0.5 + (double)facing.getDirectionVec().getZ() * 0.5
-                        );
-                        this.canRotate = true;
+                    // 如果是 SNAP 模式且没有处于活跃的转头放置期，则强制略过射线修正确保不锁死视角的 hitVec
+                    if (this.rotationMode.getValue() == 5 && !this.isSnapping) {
+                        // Skip
                     } else {
-                        // 其他常规模式保留原有的射线碰撞循环
                         double[] x = placeOffsets;
                         double[] y = placeOffsets;
                         double[] z = placeOffsets;
@@ -445,17 +467,16 @@ public class Scaffold extends Module {
                         }
                     }
 
-                    // 速度分级处理：当处于 Mode 5 时拥有极高的单步回转步长，转头速度特别快
+                    // 速度分级处理：为 SNAP 设计平滑且极快的步长
                     if (this.rotationMode.getValue() == 5) {
                         float diffYaw = MathHelper.wrapAngleTo180_float(targetYaw - event.getYaw());
                         float diffPitch = targetPitch - event.getPitch();
-                        float maxSimpleYawDelta = 120.0F;   // 极高单 tick 最大偏转角
-                        float maxSimplePitchDelta = 120.0F; // 极高单 tick 最大俯仰角
-                        if (Math.abs(diffYaw) > maxSimpleYawDelta) {
-                            targetYaw = event.getYaw() + Math.copySign(maxSimpleYawDelta, diffYaw);
+                        float maxSnapDelta = 100.0F; // 平滑且快的角度步长，2~3 tick 内完成大范围掉头
+                        if (Math.abs(diffYaw) > maxSnapDelta) {
+                            targetYaw = event.getYaw() + Math.copySign(maxSnapDelta, diffYaw);
                         }
-                        if (Math.abs(diffPitch) > maxSimplePitchDelta) {
-                            targetPitch = event.getPitch() + Math.copySign(maxSimplePitchDelta, diffPitch);
+                        if (Math.abs(diffPitch) > maxSnapDelta) {
+                            targetPitch = event.getPitch() + Math.copySign(maxSnapDelta, diffPitch);
                         }
                     } else if (this.rotationSpeed.getValue() < 5) {
                         int speedTicks = this.rotationSpeed.getValue() + 1;
@@ -505,28 +526,41 @@ public class Scaffold extends Module {
                     }
                 }
 
-                boolean canSimplePlace = true;
+// 替换原有的 SNAP 放置判定逻辑
+                boolean canSnapPlace = true;
                 if (this.rotationMode.getValue() == 5) {
-                    float moveYaw = MoveUtil.adjustYaw(mc.thePlayer.rotationYaw, (float) MoveUtil.getForwardValue(), (float) MoveUtil.getLeftValue());
-                    float yawDiffToSprint = Math.abs(MathHelper.wrapAngleTo180_float(this.yaw - event.getYaw())); // 针对当前真实发包角与目标对齐差值进行绝对值校验
-                    yawDiffToSprint = Math.abs(MathHelper.wrapAngleTo180_float(this.yaw - moveYaw)); // 基准值判定
-                    float finalCheckDiff = Math.abs(MathHelper.wrapAngleTo180_float(RotationState.isActived() ? RotationState.getSmoothedYaw() : event.getYaw()));
+                    // 1. 运动预测：如果检测到玩家正在快速向边缘移动，提前触发放置
+                    boolean isRunningToEdge = (Math.abs(mc.thePlayer.motionX) > 0.1 || Math.abs(mc.thePlayer.motionZ) > 0.1)
+                            && PlayerUtil.isAirBelow();
 
-                    if (Math.abs(MathHelper.wrapAngleTo180_float(this.yaw - moveYaw)) >= 50.0F) {
-                        // 如果强制绑定瞬转依然存在差值（如突发帧延迟位移），则进行条件拦截
-                        // 但在 120F 的高步长下，通常直接秒回转归零
-                    }
-                    // 这里对发包 targetYaw 严格判定：
-                    float absoluteYawDiff = Math.abs(MathHelper.wrapAngleTo180_float(this.yaw - moveYaw));
-                    if (absoluteYawDiff >= 10.0F) {
-                        canSimplePlace = false;
+                    if (this.isSnapping) {
+                        float absoluteYawDiff = Math.abs(MathHelper.wrapAngleTo180_float(this.yaw - event.getYaw()));
+                        // 增加容错：如果是为了防止跌落，将容错进一步放宽，且不强制锁死放置
+                        if (absoluteYawDiff > 45.0F && !isRunningToEdge) {
+                            canSnapPlace = false;
+                        }
+                    } else {
+                        // 关键改进：如果脚下没方块了，强制打断冷却时间直接开始 SNAP
+                        if (PlayerUtil.isAirBelow()) {
+                            this.isSnapping = true;
+                            this.snapCooldown = 0; // 强制清除冷却
+                            canSnapPlace = true;
+                        } else {
+                            canSnapPlace = false;
+                        }
                     }
                 }
 
-                if ((blockData != null && hitVec != null && this.rotationTick <= 0 && canSimplePlace)) {
+                if ((blockData != null && hitVec != null && this.rotationTick <= 0 && canSnapPlace)) {
                     this.place(blockData.blockPos(), blockData.facing(), hitVec);
 
-                    // Mode 5 下完全跳过原有多重射线检测，避免引发异常
+                    // SNAP 模式放置完成立刻激活 3tick 周期冷却，并通知立刻回调原始视角
+                    if (this.rotationMode.getValue() == 5) {
+                        this.snapCooldown = 2;
+                        this.isSnapping = false;
+                    }
+
+                    // SNAP 严格遵循一方块/3tick的周期限制，绕过多重放置
                     if (this.multiplace.getValue() && this.rotationMode.getValue() != 5) {
                         for (int i = 0; i < 3; i++) {
                             blockData = this.getBlockData();
@@ -560,7 +594,7 @@ public class Scaffold extends Module {
                         }
                     }
                 }
-                if (this.targetFacing != null && canSimplePlace) {
+                if (this.targetFacing != null && canSnapPlace) {
                     if ((this.rotationTick <= 0) ||(this.rotationTick <= 1 && this.tower.getValue() == 4 && this.canplace && this.onairplace)) {
                         int playerBlockX = MathHelper.floor_double(mc.thePlayer.posX);
                         int playerBlockY = MathHelper.floor_double(mc.thePlayer.posY);
@@ -568,9 +602,13 @@ public class Scaffold extends Module {
                         BlockPos belowPlayer = new BlockPos(playerBlockX, playerBlockY - 1, playerBlockZ);
                         hitVec = BlockUtil.getHitVec(belowPlayer, this.targetFacing, this.yaw, this.pitch);
                         this.place(belowPlayer, this.targetFacing, hitVec);
+                        if (this.rotationMode.getValue() == 5) {
+                            this.snapCooldown = 3;
+                            this.isSnapping = false;
+                        }
                     }
                     this.targetFacing = null;
-                } else if (this.keepY.getValue() == 2 && this.stage > 0 && !mc.thePlayer.onGround && canSimplePlace) {
+                } else if (this.keepY.getValue() == 2 && this.stage > 0 && !mc.thePlayer.onGround && canSnapPlace) {
                     int nextBlockY = MathHelper.floor_double(mc.thePlayer.posY + mc.thePlayer.motionY);
                     if (nextBlockY <= this.startY && mc.thePlayer.posY > (double) (this.startY + 1)) {
                         this.shouldKeepY = true;
@@ -578,6 +616,10 @@ public class Scaffold extends Module {
                         if ((blockData != null && this.rotationTick <= 0)||(blockData != null && this.rotationTick <= 1 && this.tower.getValue() == 4 && this.canplace && this.onairplace)) {
                             hitVec = BlockUtil.getHitVec(blockData.blockPos(), blockData.facing(), this.yaw, this.pitch);
                             this.place(blockData.blockPos(), blockData.facing(), hitVec);
+                            if (this.rotationMode.getValue() == 5) {
+                                this.snapCooldown = 3;
+                                this.isSnapping = false;
+                            }
                         }
                     }
                 }
@@ -866,6 +908,8 @@ public class Scaffold extends Module {
         this.towerTick = 0;
         this.towerDelay = 0;
         this.towering = false;
+        this.snapCooldown = 0;
+        this.isSnapping = false;
         if (mc.thePlayer != null && !mc.thePlayer.onGround) {
             this.onairplace = false;
         }

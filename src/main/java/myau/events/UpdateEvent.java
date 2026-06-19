@@ -62,6 +62,7 @@ public class UpdateEvent implements Event {
             this.lastPriority = priority;
             this.rotated = true;
         }
+
     }
 
     public void setPervRotation(float yaw, int priority) {
