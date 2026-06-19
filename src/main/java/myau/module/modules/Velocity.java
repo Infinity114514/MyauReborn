@@ -19,6 +19,7 @@ import myau.util.MoveUtil;
 import myau.util.RayCastUtil;
 import myau.util.RotationUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.play.client.*;
@@ -53,18 +54,34 @@ public class Velocity extends Module {
     private static boolean b_inventory = false;
     private static boolean b_dig = false;
 
+    // Leader's prediction variables
+    private int ticksSinceVelocity = -1;
+    private boolean handleReset = false;
+    private int reduceTick = -1;
+    private boolean extraAttacked = false;
+
     public final ModeProperty mode = new ModeProperty("mode", 0, new String[]{"VANILLA", "Prediction", "ReduceA", "ReduceB"});
-    private final BooleanProperty noBlink = new BooleanProperty("NoBlinking", true, () -> mode.getValue() != 0);
-    private final BooleanProperty noBlocking = new BooleanProperty("NoBlocking", true, () -> mode.getValue() != 0);
-    public final IntProperty attackTimes = new IntProperty("AttackTimes", 1, 1, 5, () -> this.mode.getValue() == 1 && this.reduce.getValue());
-    public final BooleanProperty reduce = new BooleanProperty("reduce", true, () -> mode.getValue() == 1);
+    private final BooleanProperty noBlink = new BooleanProperty("NoBlinking", true, () -> mode.getValue() > 1);
+    private final BooleanProperty noBlocking = new BooleanProperty("NoBlocking", true, () -> mode.getValue() == 2); // 仅在 ReduceA 下可用
+
+    // Prediction & ReduceB Shared/Specific Properties
+    public final BooleanProperty reduce = new BooleanProperty("Reduce", true, () -> mode.getValue() == 1 || mode.getValue() == 3);
+    public final ModeProperty reduceMode = new ModeProperty("ReduceMode", 0, new String[]{"Attack", "ReleaseWhenCanAttack","ReleaseBeforeCanAttack"}, () -> mode.getValue() == 1 && reduce.getValue());
+    private final BooleanProperty extraAttack = new BooleanProperty("ExtraAttack", false, () -> mode.getValue() == 1 && reduce.getValue() && reduceMode.getValue() == 1);
+    private final BooleanProperty reduceWhenCanAttack = new BooleanProperty("Reduce When Can Attack", true, () -> mode.getValue() == 1 && reduce.getValue() && reduceMode.getValue() == 0);
+    private final BooleanProperty onlySprinting = new BooleanProperty("Only Sprinting", true, () -> mode.getValue() == 1 && reduceMode.getValue() == 0);
+    public final IntProperty attackTimes = new IntProperty("Attack Times", 1, 1, 5, () -> this.mode.getValue() == 1 && this.reduce.getValue() && reduceMode.getValue() == 0);
+
     public final BooleanProperty jump = new BooleanProperty("Jump", true, () -> mode.getValue() == 1);
-    public final BooleanProperty delay = new BooleanProperty("delay", false, () -> mode.getValue() == 1 && !this.airBuffer.getValue());
-    public final IntProperty delayTicks = new IntProperty("delay-ticks", 1, 1, 5, () -> mode.getValue() == 1 && delay.getValue() && !this.airBuffer.getValue());
+    public final BooleanProperty delay = new BooleanProperty("Delay", false, () -> mode.getValue() == 1);
+    public final BooleanProperty airBuffer = new BooleanProperty("Delay Till On Ground", true, () -> mode.getValue() == 1 && delay.getValue());
+    public final IntProperty delayTicks = new IntProperty("Delay Ticks", 1, 1, 5, () -> mode.getValue() == 1 && delay.getValue() && !this.airBuffer.getValue());
+    public final BooleanProperty groundDelay = new BooleanProperty("Ground Delay", false, () -> mode.getValue() == 1 && delay.getValue() && !airBuffer.getValue());
     public final BooleanProperty rotate = new BooleanProperty("Rotate", false, () -> this.mode.getValue() == 1);
-    public final IntProperty rotateTick = new IntProperty("Rotate Tick", 3, 1, 12, () -> this.mode.getValue() == 1 && this.rotate.getValue());
+    public final IntProperty rotateTick = new IntProperty("Rotate Ticks", 3, 1, 12, () -> this.mode.getValue() == 1 && this.rotate.getValue());
     public final BooleanProperty autoMove = new BooleanProperty("Auto Move", false, () -> this.mode.getValue() == 1 && this.rotate.getValue());
-    public final BooleanProperty airBuffer = new BooleanProperty("air-buffer", true, () -> mode.getValue() == 1 && !delay.getValue());
+
+    // Vanilla/Other properties
     public final PercentProperty chance = new PercentProperty("chance", 100, () -> mode.getValue() == 0);
     public final PercentProperty horizontal = new PercentProperty("horizontal", 100, () -> mode.getValue() == 0);
     public final PercentProperty vertical = new PercentProperty("vertical", 100, () -> mode.getValue() == 0);
@@ -145,6 +162,7 @@ public class Velocity extends Module {
                     allowNext = true;
                     return;
                 }
+
                 if (this.mode.getValue() == 1 && this.rotate.getValue() && event.getY() > 0.0) {
                     this.knockbackX = event.getX();
                     this.knockbackZ = event.getZ();
@@ -152,16 +170,23 @@ public class Velocity extends Module {
                         this.rotatoTickCounter = 1;
                     }
                 }
-                double packetDirection = Math.atan2(event.getX(), event.getZ());
-                double degreePlayer = getDirection();
-                double degreePacket = Math.floorMod((int) Math.toDegrees(packetDirection), 360);
-                double angle = Math.abs(degreePacket + degreePlayer);
-                angle = Math.floorMod((int) angle, 360);
-                double threshold = 120.0;
-                boolean inRange = angle >= (180.0 - threshold / 2.0) && angle <= (180.0 + threshold / 2.0);
-                if (inRange) {
-                    this.jumpFlag = (this.mode.getValue() == 1 && jump.getValue()) && event.getY() > 0.0;
+                if (this.mode.getValue() == 1 && !delay.getValue()) {
+                    ticksSinceVelocity = 0;
                 }
+
+                if (mode.getValue() != 1) {
+                    double packetDirection = Math.atan2(event.getX(), event.getZ());
+                    double degreePlayer = getDirection();
+                    double degreePacket = Math.floorMod((int) Math.toDegrees(packetDirection), 360);
+                    double angle = Math.abs(degreePacket + degreePlayer);
+                    angle = Math.floorMod((int) angle, 360);
+                    double threshold = 120.0;
+                    boolean inRange = angle >= (180.0 - threshold / 2.0) && angle <= (180.0 + threshold / 2.0);
+                    if (inRange) {
+                        this.jumpFlag = (this.mode.getValue() == 1 && jump.getValue()) && event.getY() > 0.0;
+                    }
+                }
+
                 chanceCounter = chanceCounter % 100 + chance.getValue();
                 if (chanceCounter >= 100) {
                     if (mode.getValue() == 0) {
@@ -192,7 +217,6 @@ public class Velocity extends Module {
         inventory = false;
     }
 
-    // --- ReduceB 专属的 BadPacket 检测与重置逻辑 ---
     private boolean badPacketsB() {
         return b_slot || b_attack || b_swing || b_block || b_inventory || b_dig;
     }
@@ -217,10 +241,58 @@ public class Velocity extends Module {
     }
 
     @EventTarget
+    public void onTick(TickEvent event){
+        if (this.isEnabled()){
+            if (mc.thePlayer == null || mc.thePlayer.isDead || mc.thePlayer.getHealth() <= 0) {
+                ticksSinceVelocity = -1;
+                handleReset = false;
+                return;
+            }
+            if (ticksSinceVelocity >= 0) {
+                ticksSinceVelocity++;
+            }
+            if (ticksSinceVelocity >= 10) {
+                ticksSinceVelocity = -1;
+            }
+            if (jump.getValue() && this.mode.getValue() == 1){
+                handleJumpReset();
+            }
+        }
+    }
+
+    private void handleJumpReset() {
+        boolean scaffoldEnabled = false;
+        for (Module m : Myau.moduleManager.modules.values()) {
+            if (m.getName().equalsIgnoreCase("Scaffold") && m.isEnabled()) scaffoldEnabled = true;
+        }
+
+        if (mc.thePlayer == null || mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiInventory || scaffoldEnabled) return;
+
+        if (ticksSinceVelocity >= 0) {
+            handleReset = true;
+            if (ticksSinceVelocity <= 2 && mc.thePlayer.onGround) {
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindJump.getKeyCode(), true);
+            }
+        }
+        if (ticksSinceVelocity >= 4 && ticksSinceVelocity <= 9) {
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindJump.getKeyCode(), false);
+            handleReset = false;
+        }
+    }
+
+    @EventTarget
     public void onUpdate(UpdateEvent event) {
         if (!isEnabled()) return;
-
-        // Mode 1 (Prediction) Logic
+        if (mc.thePlayer == null || mc.thePlayer.isDead || mc.thePlayer.getHealth() <= 0) {
+            hasReceivedVelocity = false;
+            extraAttacked = false;
+            ticksSinceVelocity = -1;
+            handleReset = false;
+            delayFlag = false;
+            this.rotatoTickCounter = 0;
+            this.targetRotation = null;
+            return;
+        }
         if (mode.getValue() == 1) {
             if (event.getType() == EventType.PRE) {
                 int maxTick = this.rotateTick.getValue();
@@ -247,65 +319,80 @@ public class Velocity extends Module {
                         this.knockbackZ = 0;
                     }
                 }
+                KillAura killAura = (KillAura) Myau.moduleManager.modules.get(KillAura.class);
                 if (delayFlag && ((delay.getValue()
-                        && (isInLiquidOrWeb() || Myau.delayManager.getDelay() >= (long) delayTicks.getValue()))
-                        || (airBuffer.getValue() && mc.thePlayer.onGround && delayFlag))) {
+                        && (isInLiquidOrWeb() || Myau.delayManager.getDelay() >= (long) delayTicks.getValue() && !airBuffer.getValue()) || (mc.thePlayer.onGround && !groundDelay.getValue() && !airBuffer.getValue()))
+                        || (airBuffer.getValue() && mc.thePlayer.onGround && delayFlag))  || (killAura != null && reduceMode.getValue() == 1 && killAura.autoBlock.getValue() == 2 && killAura.blockTick == 0 && killAura.shouldAutoBlock()  && reduce.getValue()) || (killAura != null && reduceMode.getValue() == 2 && killAura.autoBlock.getValue() == 2 && killAura.blockTick == 2 && killAura.shouldAutoBlock()) && reduce.getValue()) {
+                    ticksSinceVelocity = 0;
+                    if (killAura != null && killAura.getTarget() != null) {
+                        if (extraAttack.getValue() && reduceMode.getValue() == 1 && reduce.getValue() && killAura.blockTick == 0) {
+                            extraAttacked = true;
+                        }
+                    }
+                    hasReceivedVelocity = true;
                     dbg(Myau.clientName + "Delay/Buffer " + Myau.delayManager.getDelay() + " Ticks");
                     Myau.delayManager.setDelayState(false, DelayModules.VELOCITY);
                     delayFlag = false;
                 }
             }
-            if (reduce.getValue()) {
-                if (event.getType() != EventType.PRE) return;
-                if (hasReceivedVelocity) {
-                    RayCastUtil.RayCastResult targetA = RayCastUtil.rayCast(new RotationUtil.RotationVec(event.getYaw(), event.getPitch()), 3.2);
-                    if (targetA != null) {
+
+            if (reduce.getValue() && event.getType() == EventType.PRE) {
+                if (extraAttacked){
+                    KillAura killAura = (KillAura) Myau.moduleManager.modules.get(KillAura.class);
+                    if (killAura != null && killAura.getTarget() != null) {
+                        EventManager.call(new AttackEvent(killAura.getTarget()));
+                        mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
+                        if (killAura.getTarget() != mc.thePlayer) {
+                            mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(killAura.getTarget(), C02PacketUseEntity.Action.ATTACK));
+                        } else {
+                            mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(Objects.requireNonNull(killAura.getTarget()), C02PacketUseEntity.Action.ATTACK));
+                        }
+                        mc.thePlayer.motionX *= 0.6D;
+                        mc.thePlayer.motionZ *= 0.6D;
+                        mc.thePlayer.setSprinting(false);
+                    }
+                    extraAttacked = false;
+                }
+                if (hasReceivedVelocity){
+                    if (reduceTick >= attackTimes.getValue()){
+                        reduceTick = 0;
+                        hasReceivedVelocity = false;
+                    }
+                    RayCastUtil.RayCastResult targetA = RayCastUtil.rayCast(new RotationUtil.RotationVec(event.getYaw(),event.getPitch()),3);
+                    if (targetA != null && reduceMode.getValue() == 0) {
                         if (targetA.entityHit instanceof EntityPlayer && targetA.entityHit != mc.thePlayer) {
-                            if (mc.thePlayer.isSprinting()) {
-                                attacking = true;
-                                KillAura killAura = (KillAura) Myau.moduleManager.getModule(KillAura.class);
-                                if (killAura.getTarget() != null) {
-                                    if (!noBlink.getValue() || !Myau.blinkManager.isBlinking()) {
-                                        if (!noBlocking.getValue() || !mc.thePlayer.isBlocking()) {
-                                            for (int i = 1; i <= attackTimes.getValue(); ++i) {
-                                                EventManager.call(new AttackEvent(killAura.getTarget()));
-                                                mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
-                                                if (killAura.getTarget() != mc.thePlayer) {
-                                                    mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(killAura.getTarget(), C02PacketUseEntity.Action.ATTACK));
-                                                } else {
-                                                    mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(Objects.requireNonNull(killAura.getTarget()), C02PacketUseEntity.Action.ATTACK));
-                                                }
-                                                mc.thePlayer.motionX *= 0.6D;
-                                                mc.thePlayer.motionZ *= 0.6D;
-                                                mc.thePlayer.setSprinting(false);
-                                            }
+                            if (mc.thePlayer.isSprinting() || !this.onlySprinting.getValue()) {
+                                KillAura killAura = (KillAura) Myau.moduleManager.modules.get(KillAura.class);
+                                if (killAura != null && killAura.getTarget() != null) {
+                                    if (!reduceWhenCanAttack.getValue() || (killAura.blockTick == 0 && killAura.autoBlock.getValue() == 2) || (killAura.autoBlock.getValue() == 6 && killAura.autoBlock.getValue() == 5 && killAura.blockTick == 0)) {
+                                        EventManager.call(new AttackEvent(killAura.getTarget()));
+                                        mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
+                                        if (killAura.getTarget() != mc.thePlayer) {
+                                            mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(killAura.getTarget(), C02PacketUseEntity.Action.ATTACK));
+                                        } else {
+                                            mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(Objects.requireNonNull(killAura.getTarget()), C02PacketUseEntity.Action.ATTACK));
                                         }
+                                        mc.thePlayer.motionX *= 0.6D;
+                                        mc.thePlayer.motionZ *= 0.6D;
+                                        mc.thePlayer.setSprinting(false);
                                     }
-                                    attacking = false;
                                 } else {
-                                    if (!noBlink.getValue() || !Myau.blinkManager.isBlinking()) {
-                                        if (!noBlocking.getValue() || !mc.thePlayer.isBlocking()) {
-                                            for (int i = 1; i <= attackTimes.getValue(); ++i) {
-                                                EventManager.call(new AttackEvent(targetA.entityHit));
-                                                mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
-                                                if (targetA.entityHit != mc.thePlayer) {
-                                                    mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(targetA.entityHit, C02PacketUseEntity.Action.ATTACK));
-                                                } else {
-                                                    mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(Objects.requireNonNull(targetA.entityHit), C02PacketUseEntity.Action.ATTACK));
-                                                }
-                                                mc.thePlayer.motionX *= 0.6D;
-                                                mc.thePlayer.motionZ *= 0.6D;
-                                                mc.thePlayer.setSprinting(false);
-                                            }
-                                        }
-                                        attacking = false;
+                                    EventManager.call(new AttackEvent(targetA.entityHit));
+                                    mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
+                                    if (targetA.entityHit != mc.thePlayer) {
+                                        mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(targetA.entityHit, C02PacketUseEntity.Action.ATTACK));
+                                    } else {
+                                        mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(Objects.requireNonNull(targetA.entityHit), C02PacketUseEntity.Action.ATTACK));
                                     }
+                                    mc.thePlayer.motionX *= 0.6D;
+                                    mc.thePlayer.motionZ *= 0.6D;
+                                    mc.thePlayer.setSprinting(false);
                                 }
                             }
                         }
                     }
+                    reduceTick++;
                 }
-                hasReceivedVelocity = false;
             }
         }
 
@@ -319,7 +406,7 @@ public class Velocity extends Module {
                             if (mc.thePlayer.isSprinting()) {
                                 attacking = true;
                                 KillAura killAura = (KillAura) Myau.moduleManager.modules.get(KillAura.class);
-                                if (killAura.getTarget() != null) {
+                                if (killAura != null && killAura.getTarget() != null) {
                                     if (!noBlink.getValue() || !Myau.blinkManager.isBlinking()) {
                                         if (!noBlocking.getValue() || !mc.thePlayer.isBlocking()) {
                                             EventManager.call(new AttackEvent(killAura.getTarget()));
@@ -362,9 +449,10 @@ public class Velocity extends Module {
             }
         }
 
+        // Mode 3 (ReduceB) Logic -> Integrated exactly from Attackreduce99.52.java
         if (mode.getValue() == 3) {
             if (event.getType() != EventType.PRE) return;
-            if (reduceTicks <= 0) return;
+            if (reduceTicks <= 0 || !reduce.getValue()) return;
 
             reduceTicks--;
 
@@ -379,7 +467,6 @@ public class Velocity extends Module {
             if (!MoveUtil.isMoving()) return;
             if (target == mc.thePlayer) return;
             if (badPacketsB()) return;
-            if (noBlocking.getValue() && mc.thePlayer.isBlocking()) return;
 
             if (mc.getNetHandler() != null) {
                 EventManager.call(new AttackEvent(target));
@@ -392,7 +479,7 @@ public class Velocity extends Module {
             mc.thePlayer.setSprinting(false);
 
             reduceAnInt++;
-            ChatUtil.sendFormatted(Myau.clientName + "Reduce" + reduceAnInt);
+            ChatUtil.sendRaw("Reduce" + reduceAnInt);
         }
     }
 
@@ -403,7 +490,6 @@ public class Velocity extends Module {
                 S12PacketEntityVelocity packet = (S12PacketEntityVelocity) event.getPacket();
                 if (packet.getEntityID() == mc.thePlayer.getEntityId()) {
 
-                    // ReduceB 击退 Tick 计算触发
                     if (mode.getValue() == 3) {
                         this.reduceTicks = getReduceTicks(packet.getMotionX(), packet.getMotionZ());
                     }
@@ -420,15 +506,30 @@ public class Velocity extends Module {
                     if (inRange) {
                         isFallDamage = false;
                     }
-                    hasReceivedVelocity = true;
-                    LongJump longJump = (LongJump) Myau.moduleManager.modules.get(LongJump.class);
+
+                    if (mode.getValue() == 1) {
+                        if (!delay.getValue()) {
+                            hasReceivedVelocity = true;
+                        }
+                    } else {
+                        hasReceivedVelocity = true;
+                    }
+
+                    Module longJumpModule = null;
+                    for (Module module : Myau.moduleManager.modules.values()) {
+                        if (module.getName().equalsIgnoreCase("LongJump")) {
+                            longJumpModule = module;
+                            break;
+                        }
+                    }
+
                     if (mode.getValue() == 1
                             && !delayFlag
                             && !isInLiquidOrWeb()
                             && !pendingExplosion
                             && (!allowNext || !(Boolean) fakeCheck.getValue())
-                            && (!longJump.isEnabled() || !longJump.canStartJump())) {
-                        if ((airBuffer.getValue() && !mc.thePlayer.onGround) || (delay.getValue() && !mc.thePlayer.onGround)) {
+                            && (longJumpModule == null || !longJumpModule.isEnabled())) {
+                        if ((airBuffer.getValue() && !mc.thePlayer.onGround) || (delay.getValue() && !mc.thePlayer.onGround) || (delay.getValue() && groundDelay.getValue() && !airBuffer.getValue())) {
                             Myau.delayManager.setDelayState(true, DelayModules.VELOCITY);
                             dbg(Myau.clientName + "Delay/Buffer Active");
                             Myau.delayManager.delayedPacket.offer(packet);
@@ -466,7 +567,6 @@ public class Velocity extends Module {
         if (event.getType() == EventType.SEND && !event.isCancelled()) {
             Packet<?> packet = event.getPacket();
 
-            // ReduceB 的发包流水追踪
             if (mode.getValue() == 3) {
                 if (packet instanceof C09PacketHeldItemChange) {
                     b_slot = true;
@@ -492,7 +592,6 @@ public class Velocity extends Module {
                 }
             }
 
-            // 原有其他 Mode 的发包追踪逻辑保持不动
             if (packet instanceof C02PacketUseEntity) {
                 C02PacketUseEntity useEntity = (C02PacketUseEntity) packet;
                 if (useEntity.getAction() == C02PacketUseEntity.Action.ATTACK) {
@@ -507,7 +606,6 @@ public class Velocity extends Module {
         }
     }
 
-    // --- ReduceB 专属的 Tick 计算器方法 ---
     private int getReduceTicks(int motionX, int motionZ) {
         double kb = Math.hypot(motionX, motionZ);
 
@@ -534,6 +632,11 @@ public class Velocity extends Module {
 
     @EventTarget
     public void onMove(MoveInputEvent event) {
+        if (this.isEnabled()){
+            if (handleReset) {
+                mc.thePlayer.movementInput.moveForward = 1.0F;
+            }
+        }
         if (this.isEnabled() && this.rotatoTickCounter > 0 && this.rotatoTickCounter <= this.rotateTick.getValue()) {
             if (this.autoMove.getValue()) {
                 mc.thePlayer.movementInput.moveForward = 1.0F;
@@ -574,6 +677,10 @@ public class Velocity extends Module {
         this.knockbackZ = 0;
         this.reduceTicks = 0;
         this.reduceAnInt = 0;
+        this.ticksSinceVelocity = -1;
+        this.handleReset = false;
+        this.reduceTick = -1;
+        this.extraAttacked = false;
         resetBadPacketsB();
     }
 
@@ -586,6 +693,10 @@ public class Velocity extends Module {
         knockback = false;
         this.reduceTicks = 0;
         this.reduceAnInt = 0;
+        this.ticksSinceVelocity = -1;
+        this.handleReset = false;
+        this.reduceTick = -1;
+        this.extraAttacked = false;
         resetBadPacketsB();
     }
 
