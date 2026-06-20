@@ -66,7 +66,6 @@ public class Scaffold extends Module {
     private boolean canplace = false;
     private boolean onairplace = false;
 
-    // SNAP mode variables
     private boolean isSnapping = false;
     private int snapCooldown = 0;
 
@@ -136,8 +135,8 @@ public class Scaffold extends Module {
 
         if (this.rotationMode.getValue() == 5) {
             // SNAP 模式：使用预判坐标，确保方块放在移动路径的前方
-            targetX = MathHelper.floor_double(mc.thePlayer.posX + mc.thePlayer.motionX * 2);
-            targetZ = MathHelper.floor_double(mc.thePlayer.posZ + mc.thePlayer.motionZ * 2);
+            targetX = MathHelper.floor_double(mc.thePlayer.posX + mc.thePlayer.motionX * 1);
+            targetZ = MathHelper.floor_double(mc.thePlayer.posZ + mc.thePlayer.motionZ * 1);
         } else {
             // 其他模式：保持原有逻辑
             targetX = MathHelper.floor_double(mc.thePlayer.posX);
@@ -264,6 +263,30 @@ public class Scaffold extends Module {
             return false;
         }
     }
+    /**
+     * 在玩家移动方向的前方采样方块，判断是否即将踩空。
+     * @param lookAhead 提前多少格开始检测（如 1.0）
+     */
+    private boolean isNearEdge(double lookAhead) {
+        double px = mc.thePlayer.posX;
+        double py = mc.thePlayer.posY;
+        double pz = mc.thePlayer.posZ;
+        float moveYaw = MoveUtil.getMoveYaw();
+        double dirX = -Math.sin(moveYaw * Math.PI / 180.0);
+        double dirZ =  Math.cos(moveYaw * Math.PI / 180.0);
+        int floorY = MathHelper.floor_double(py - 1.0);
+
+        for (double dist = 0.2; dist <= lookAhead; dist += 0.3) {
+            int checkX = MathHelper.floor_double(px + dirX * dist);
+            int checkZ = MathHelper.floor_double(pz + dirZ * dist);
+            BlockPos below = new BlockPos(checkX, floorY, checkZ);
+            Block block = mc.theWorld.getBlockState(below).getBlock();
+            if (!BlockUtil.isSolid(block) && !BlockUtil.isInteractable(block)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public Scaffold() {
         super("Scaffold", false);
@@ -321,6 +344,7 @@ public class Scaffold extends Module {
                         }
                     }
                 }
+
                 float currentYaw = this.getCurrentYaw();
                 float yawDiffTo180 = RotationUtil.wrapAngleDiff(currentYaw - 180.0F, event.getYaw());
                 float diagonalYaw = this.isDiagonal(currentYaw)
@@ -528,10 +552,13 @@ public class Scaffold extends Module {
 
 // 替换原有的 SNAP 放置判定逻辑
                 boolean canSnapPlace = true;
+                if (this.isTowering()) {
+                    canSnapPlace = false;
+                }
                 if (this.rotationMode.getValue() == 5) {
-                    // 1. 运动预测：如果检测到玩家正在快速向边缘移动，提前触发放置
-                    boolean isRunningToEdge = (Math.abs(mc.thePlayer.motionX) > 0.1 || Math.abs(mc.thePlayer.motionZ) > 0.1)
-                            && PlayerUtil.isAirBelow();
+                    boolean isMoving = Math.abs(mc.thePlayer.motionX) > 0.02 || Math.abs(mc.thePlayer.motionZ) > 0.02;
+                    boolean nearEdge = isNearEdge(1.0); // 提前 1 格检测
+                    boolean isRunningToEdge = isMoving && (PlayerUtil.isAirBelow() || nearEdge);
 
                     if (this.isSnapping) {
                         float absoluteYawDiff = Math.abs(MathHelper.wrapAngleTo180_float(this.yaw - event.getYaw()));
@@ -556,13 +583,13 @@ public class Scaffold extends Module {
 
                     // SNAP 模式放置完成立刻激活 3tick 周期冷却，并通知立刻回调原始视角
                     if (this.rotationMode.getValue() == 5) {
-                        this.snapCooldown = 2;
+                        this.snapCooldown = 1;
                         this.isSnapping = false;
                     }
 
                     // SNAP 严格遵循一方块/3tick的周期限制，绕过多重放置
                     if (this.multiplace.getValue() && this.rotationMode.getValue() != 5) {
-                        for (int i = 0; i < 3; i++) {
+                        for (int i = 0; i < 2; i++) {
                             blockData = this.getBlockData();
                             if (blockData == null) {
                                 break;
