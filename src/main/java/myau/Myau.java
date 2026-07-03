@@ -122,7 +122,7 @@ public class Myau {
         moduleManager.modules.put(Radar.class, new Radar());
         moduleManager.modules.put(SafeWalk.class, new SafeWalk());
         moduleManager.modules.put(Scaffold.class, new Scaffold());
-        moduleManager.modules.put(Stuck.class, new Stuck());
+        moduleManager.modules.put(Stasis.class, new Stasis());
         moduleManager.modules.put(AutoBlockIn.class, new AutoBlockIn());
         moduleManager.modules.put(Spammer.class, new Spammer());
         moduleManager.modules.put(Speed.class, new Speed());
@@ -132,7 +132,7 @@ public class Myau {
         moduleManager.modules.put(TargetStrafe.class, new TargetStrafe());
         moduleManager.modules.put(Tracers.class, new Tracers());
         moduleManager.modules.put(Timer.class, new Timer());
-        moduleManager.modules.put(TimerRange.class, new TimerRange());
+        //moduleManager.modules.put(TimerRange.class, new TimerRange());
         moduleManager.modules.put(Trajectories.class, new Trajectories());
         moduleManager.modules.put(ViewClip.class, new ViewClip());
         moduleManager.modules.put(Velocity.class, new Velocity());

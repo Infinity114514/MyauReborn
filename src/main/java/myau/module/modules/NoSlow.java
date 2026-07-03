@@ -23,7 +23,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
 import net.minecraft.network.play.client.C09PacketHeldItemChange;
 import net.minecraft.network.play.client.C17PacketCustomPayload;
 import net.minecraft.util.BlockPos;
@@ -40,8 +39,6 @@ public class NoSlow extends Module {
     public final PercentProperty swordMotion = new PercentProperty("sword-motion", 100, () -> this.swordMode.getValue() == 1);
     public final BooleanProperty swordSprint = new BooleanProperty("sword-sprint", true, () -> this.swordMode.getValue() != 0);
     public final BooleanProperty killauraonly = new BooleanProperty("killaura-only", false, () -> this.swordMode.getValue() != 0);
-
-    // Prediction 专属属性
     public final IntProperty swapDelay = new IntProperty("swap-delay", 0, 0, 3, () -> swordMode.getValue() == 3);
     public final BooleanProperty test = new BooleanProperty("test", false, () -> swordMode.getValue() == 3);
     public final BooleanProperty c17 = new BooleanProperty("c17-packet", false, () -> swordMode.getValue() == 3);
@@ -176,7 +173,6 @@ public class NoSlow extends Module {
             if (post) {
                 post = false;
                 if (test.getValue()) {
-                    PacketUtil.sendPacket(new C08PacketPlayerBlockPlacement(mc.thePlayer.getHeldItem()));
                     Myau.blinkManager.setBlinkState(false, BlinkModules.NOSLOW);
                 }
             }

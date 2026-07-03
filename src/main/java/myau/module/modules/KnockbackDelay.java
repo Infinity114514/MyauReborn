@@ -18,6 +18,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.INetHandlerPlayClient;
 import net.minecraft.network.play.server.*;
 import net.minecraft.util.MovingObjectPosition;
+import scala.tools.nsc.doc.model.Public;
 
 import java.lang.reflect.Field;
 import java.util.Queue;
@@ -195,9 +196,9 @@ public class KnockbackDelay extends Module {
         }
     }
 
-    private Entity findTarget() {
+    public Entity findTarget() {
         KillAura ka = (KillAura) Myau.moduleManager.modules.get(KillAura.class);
-        if (ka != null && ka.isEnabled() && ka.target != null) {
+        if (ka != null && ka.isEnabled() && ka.getTarget() != null) {
             try {
                 Field entityField = KillAura.AttackData.class.getDeclaredField("entity");
                 entityField.setAccessible(true);
