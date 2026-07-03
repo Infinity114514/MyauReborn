@@ -52,8 +52,8 @@ public class BackTrack extends Module {
    private final IntProperty maxLatency = new IntProperty("MaxMS", 100, 10, 1000);
    private final FloatProperty minDistance = new FloatProperty("MinDistance", 0.0F, 0.0F, 3.0F);
    private final FloatProperty maxDistance = new FloatProperty("MaxDistance", 6.0F, 0.0F, 10.0F);
-   private final IntProperty stopOnTargetHurtTime = new IntProperty("PlayerHurtTime", -1, -1, 10);
-   private final IntProperty stopOnSelfHurtTime = new IntProperty("StopOnSelfHurtTime", -1, -1, 10);
+   private final IntProperty stopOnTargetHurtTime = new IntProperty("PlayerHurtTime", 0, -1, 10);
+   private final IntProperty stopOnSelfHurtTime = new IntProperty("StopOnSelfHurtTime", 0, -1, 10);
    private final BooleanProperty drawRealPosition = new BooleanProperty("DrawRealPosition", true);
    private final Queue<TimedPacket> packetQueue = new ConcurrentLinkedQueue<>();
    private final List<Packet<?>> skipPackets = new ArrayList<>();

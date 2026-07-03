@@ -190,7 +190,7 @@ public class InvManager extends Module {
                   int equippedAxeSlot = ItemUtil.findInventorySlot("axe", preferredAxeHotbarSlot, true);
                   int inventoryAxeSlot = ItemUtil.findInventorySlot("axe", preferredAxeHotbarSlot, false);
                   int preferredBlocksHotbarSlot = this.blocksSlot.getValue() - 1;
-                  int inventoryBlocksSlot = ItemUtil.findInventorySlot(preferredBlocksHotbarSlot);
+                  int inventoryBlocksSlot = ItemUtil.findInventorySlot(preferredBlocksHotbarSlot, ItemUtil.ItemType.Block);
                   int preferredThrowsHotbarSlot = this.throwsSlot.getValue() - 1;
                   int equippedThrowsSlot = this.findThrowableSlot(preferredThrowsHotbarSlot, true);
                   int inventoryThrowsSlot = this.findThrowableSlot(preferredThrowsHotbarSlot, false);

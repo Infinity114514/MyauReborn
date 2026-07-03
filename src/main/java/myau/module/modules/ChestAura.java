@@ -89,6 +89,11 @@ public class ChestAura extends Module {
         if (!isEnabled()) return;
         if (event.getType() != EventType.PRE) return;
 
+        if (mc.currentScreen != null) {
+            targetChest = null;
+            isRotating = false;
+            return;
+        }
         // 检查 Scaffold 是否启用
         if (noWorkWhenScaffold.getValue()) {
             Scaffold scaffold = (Scaffold) Myau.moduleManager.getModule(Scaffold.class);

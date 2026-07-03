@@ -48,10 +48,10 @@ public class ClickGui extends GuiScreen {
         combatModules.add(Myau.moduleManager.getModule(HitBox.class));
         combatModules.add(Myau.moduleManager.getModule(MoreKB.class));
         combatModules.add(Myau.moduleManager.getModule(BackTrack.class));
-        combatModules.add(Myau.moduleManager.getModule(TimerRange.class));
+        //combatModules.add(Myau.moduleManager.getModule(TimerRange.class));
 
         List<Module> movementModules = new ArrayList<>();
-        movementModules.add(Myau.moduleManager.getModule(Stuck.class));
+        movementModules.add(Myau.moduleManager.getModule(Stasis.class));
         movementModules.add(Myau.moduleManager.getModule(MLG.class));
         movementModules.add(Myau.moduleManager.getModule(FakeLag.class));
         movementModules.add(Myau.moduleManager.getModule(AntiAFK.class));
@@ -182,8 +182,8 @@ public class ClickGui extends GuiScreen {
 
     public void drawScreen(int x, int y, float p) {
         drawRect(0, 0, this.width, this.height, new Color(0, 0, 0, 100).getRGB());
-        mc.fontRendererObj.drawStringWithShadow("build-date 2026/06/17", 4, this.height - 3 - mc.fontRendererObj.FONT_HEIGHT * 4, new Color(60, 162, 253).getRGB());
-        mc.fontRendererObj.drawStringWithShadow("version : B1.5", 4, this.height - 3 - mc.fontRendererObj.FONT_HEIGHT * 3, new Color(60, 162, 253).getRGB());
+        mc.fontRendererObj.drawStringWithShadow("build-date 2026/07/01", 4, this.height - 3 - mc.fontRendererObj.FONT_HEIGHT * 4, new Color(60, 162, 253).getRGB());
+        mc.fontRendererObj.drawStringWithShadow("version : B1.6", 4, this.height - 3 - mc.fontRendererObj.FONT_HEIGHT * 3, new Color(60, 162, 253).getRGB());
         mc.fontRendererObj.drawStringWithShadow("MyauReborn", 4, this.height - 3 - mc.fontRendererObj.FONT_HEIGHT * 2, new Color(60, 162, 253).getRGB());
         mc.fontRendererObj.drawStringWithShadow("dev, ksyz, 10086", 4, this.height - 3 - mc.fontRendererObj.FONT_HEIGHT, new Color(60, 162, 253).getRGB());
 

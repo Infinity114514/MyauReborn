@@ -25,13 +25,26 @@ public class RotationUtil {
         return angle;
     }
 
-    public static float smoothAngle(float angle, float smoothFactor) {
-        // 修改：直接返回原角度，或者移除随机部分
-        // 如果 smoothFactor 为 0， multiplier 应为 1.0
-        float random = 0.0f; // 移除随机
-        return angle * (0.5f + 0.5f * (1.0f - Math.max(0.0f, Math.min(1.0f, smoothFactor + random))));
+    public static boolean hasVisiblePoint(AxisAlignedBB boundingBox) {
+        Vec3 eyePos = RotationUtil.mc.thePlayer.getPositionEyes(1.0f);
+        double centerX = (boundingBox.minX + boundingBox.maxX) / 2.0;
+        double centerZ = (boundingBox.minZ + boundingBox.maxZ) / 2.0;
+        double height = boundingBox.maxY - boundingBox.minY;
+        double[] yRatios = new double[]{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+
+        for (double ratio : yRatios) {
+            double targetY = boundingBox.minY + ratio * height;
+            Vec3 targetPoint = new Vec3(centerX, targetY, centerZ);
+            if (RotationUtil.mc.theWorld.rayTraceBlocks(eyePos, targetPoint) == null) {
+                return true;
+            }
+        }
+        return false;
     }
 
+    public static float smoothAngle(float angle, float smoothFactor) {
+        return angle * (0.5f + 0.5f * (1.0f - Math.max(0.0f, Math.min(1.0f, smoothFactor + RandomUtil.nextFloat(-0.1f, 0.1f)))));
+    }
 
     public static float quantizeAngle(float angle) {
         return (float) ((double) angle - (double) angle % (double) 0.0096f);
@@ -139,36 +152,36 @@ public class RotationUtil {
     }
 
     public static final class RotationVec {
-       public float x;
-       public float y;
+        public float x;
+        public float y;
 
-       public RotationVec(RotationVec vec) {
-          this(vec.x, vec.y);
-       }
+        public RotationVec(RotationVec vec) {
+            this(vec.x, vec.y);
+        }
 
-       public RotationVec(float x, float y) {
-          this.x = x;
-          this.y = y;
-       }
+        public RotationVec(float x, float y) {
+            this.x = x;
+            this.y = y;
+        }
 
-       public RotationVec add(float x, float y) {
-          return new RotationVec(this.x + x, this.y + y);
-       }
+        public RotationVec add(float x, float y) {
+            return new RotationVec(this.x + x, this.y + y);
+        }
 
-       public float getX() {
-          return this.x;
-       }
+        public float getX() {
+            return this.x;
+        }
 
-       public float getY() {
-          return this.y;
-       }
+        public float getY() {
+            return this.y;
+        }
 
-       public void setX(float x) {
-          this.x = x;
-       }
+        public void setX(float x) {
+            this.x = x;
+        }
 
-       public void setY(float y) {
-          this.y = y;
-       }
+        public void setY(float y) {
+            this.y = y;
+        }
     }
 }
