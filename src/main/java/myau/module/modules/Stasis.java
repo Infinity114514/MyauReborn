@@ -24,8 +24,8 @@ public class Stasis extends Module {
 
     public Stasis() {
         super("Stasis", false);
-        this.STASIS_TICKS = new IntProperty("STASIS_TICKS", 2, 1, 5);
-        this.RELEASE_TICKS = new IntProperty("RELEASE_TICKS", 40, 1, 60);
+        this.STASIS_TICKS = new IntProperty("STASIS_TICKS", 40, 1, 60);
+        this.RELEASE_TICKS = new IntProperty("RELEASE_TICKS", 2, 1, 5);
     }
 
     @Override
