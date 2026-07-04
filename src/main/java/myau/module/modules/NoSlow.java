@@ -30,7 +30,7 @@ public class NoSlow extends Module {
     public final BooleanProperty noAttack = new BooleanProperty("No Attack", false, () -> swordMode.getValue() == 2);
     public final PercentProperty swordMotion = new PercentProperty("Sword Motion", 100, () -> this.swordMode.getValue() != 0);
     public final BooleanProperty swordSprint = new BooleanProperty("Sword Sprint", true, () -> this.swordMode.getValue() != 0);
-    public final BooleanProperty onlyKillAuraAutoBlock = new BooleanProperty("Only Kill Aura Auto Block", false, () -> this.swordMode.getValue() != 0);
+    public final BooleanProperty onlyKillAuraAutoBlock = new BooleanProperty("only-autoblock", false, () -> this.swordMode.getValue() != 0);
     public final ModeProperty foodMode = new ModeProperty("Food Mode", 0, new String[]{"None", "Vanilla", "Float"});
     public final PercentProperty foodMotion = new PercentProperty("Food Motion", 100, () -> this.foodMode.getValue() != 0);
     public final BooleanProperty foodSprint = new BooleanProperty("Food Sprint", true, () -> this.foodMode.getValue() != 0);
@@ -75,7 +75,7 @@ public class NoSlow extends Module {
             return mc.thePlayer.isUsingItem() && (this.isSwordActive() || this.isFoodActive() || this.isBowActive());
         } else if (this.swordMode.getValue() == 2 && isSwordActive()) {
             KillAura killAura = (KillAura) Myau.moduleManager.getModule(KillAura.class);
-            if (!noAttack.getValue() || !((killAura.blockTick == 0 && killAura.autoBlock.getValue() == 3) || (killAura.autoBlock.getValue() != 6 && killAura.autoBlock.getValue() != 2) || (killAura.autoBlock.getValue() == 4 && killAura.blockTick == 0) && killAura.isEnabled() && killAura.isPlayerBlocking())) {
+            if (!noAttack.getValue() || !((killAura.blockTick == 0 && killAura.autoBlock.getValue() == 3) || (killAura.autoBlock.getValue() == 4 && killAura.blockTick == 0) && killAura.isEnabled() && killAura.isPlayerBlocking())) {
                 return delay == 0;
             }
         }
@@ -108,7 +108,7 @@ public class NoSlow extends Module {
                         delay--;
                         if (delay < 0) {
                             KillAura killAura = (KillAura) Myau.moduleManager.getModule(KillAura.class);
-                            if (!noAttack.getValue() || !((killAura.blockTick == 0 && killAura.autoBlock.getValue() == 3) || (killAura.autoBlock.getValue() == 4 && killAura.blockTick == 0) && killAura.isEnabled() && killAura.isPlayerBlocking())) {
+                            if (!noAttack.getValue() || !((killAura.blockTick == 0 && killAura.autoBlock.getValue() == 3)  || (killAura.autoBlock.getValue() != 4 && killAura.autoBlock.getValue() != 3) || (killAura.autoBlock.getValue() == 4 && killAura.blockTick == 0) && killAura.isEnabled() && killAura.isPlayerBlocking())) {
                                 int randomSlot = new Random().nextInt(9);
                                 while (randomSlot == mc.thePlayer.inventory.currentItem) {
                                     randomSlot = new Random().nextInt(9);

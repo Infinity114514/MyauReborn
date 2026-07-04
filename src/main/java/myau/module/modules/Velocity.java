@@ -193,13 +193,12 @@ public class Velocity extends Module {
 
     @EventTarget
     public void onLivingUpdate(LivingUpdateEvent event) {
-        // 加上对 Mode 2 且开启了 hypixelJump 选项的判断
         boolean isMode1 = this.mode.getValue() == 1;
         boolean isMode2Jump = this.mode.getValue() == 2 && this.hypixelJump.getValue();
 
         if (this.isEnabled() && this.jumpFlag && (isMode1 || isMode2Jump)) {
             this.jumpFlag = false;
-            if (mc.thePlayer.onGround && mc.thePlayer.isSprinting() && !mc.thePlayer.isPotionActive(Potion.jump) && !this.isInLiquidOrWeb()) {
+            if (mc.thePlayer.onGround && mc.thePlayer.motionY > 0 && mc.thePlayer.isSprinting() && !mc.thePlayer.isPotionActive(Potion.jump) && !this.isInLiquidOrWeb()) {
                 mc.thePlayer.movementInput.jump = true;
             }
         }
