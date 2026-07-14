@@ -211,15 +211,18 @@ public class Velocity extends Module {
         if (this.mode.getValue() == 2) {
             if (event.getType() == EventType.PRE) {
                 if (this.reduce.getValue()) {
+                    KillAura killAura = (KillAura) Myau.moduleManager.getModule(KillAura.class);
+
                     if (this.velocityAttacked) {
-                        KillAura killAura = (KillAura) Myau.moduleManager.getModule(KillAura.class);
-                        if (killAura.getTarget() != null && killAura.isEnabled()) {
-                            EventManager.call(new AttackEvent(killAura.getTarget()));
-                            mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
-                            mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(killAura.getTarget(), C02PacketUseEntity.Action.ATTACK));
-                            mc.thePlayer.motionX *= 0.6D;
-                            mc.thePlayer.motionZ *= 0.6D;
-                            mc.thePlayer.setSprinting(false);
+                        if (killAura != null && killAura.getTarget() != null && killAura.isEnabled()) {
+                            if (!killAura.isPlayerBlocking()) {
+                                EventManager.call(new AttackEvent(killAura.getTarget()));
+                                mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
+                                mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(killAura.getTarget(), C02PacketUseEntity.Action.ATTACK));
+                                mc.thePlayer.motionX *= 0.6D;
+                                mc.thePlayer.motionZ *= 0.6D;
+                                mc.thePlayer.setSprinting(false);
+                            }
                         }
                         velocityAttacked = false;
                     }
@@ -229,18 +232,21 @@ public class Velocity extends Module {
                             this.reduceTick = 0;
                             this.hasReceivedVelocity = false;
                         }
-                        KillAura killAura = (KillAura) Myau.moduleManager.getModule(KillAura.class);
-                        if (killAura.getTarget() != null) {
+
+                        if (killAura != null && killAura.getTarget() != null) {
                             if (mc.thePlayer.isSprinting() || !this.onlySprinting.getValue()) {
-                                if (!this.reduceWhenCanAttack.getValue()
-                                        || (killAura.blockTick == 0 && killAura.autoBlock.getValue() == 4)
-                                        || (killAura.autoBlock.getValue() == 3 && killAura.blockTick == 0)) {
-                                    EventManager.call(new AttackEvent(killAura.getTarget()));
-                                    mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
-                                    mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(killAura.getTarget(), C02PacketUseEntity.Action.ATTACK));
-                                    mc.thePlayer.motionX *= 0.6D;
-                                    mc.thePlayer.motionZ *= 0.6D;
-                                    mc.thePlayer.setSprinting(false);
+                                // [修复] 检查玩家是否处于格挡状态
+                                if (!killAura.isPlayerBlocking()) {
+                                    if (!this.reduceWhenCanAttack.getValue()
+                                            || (killAura.blockTick == 0 && killAura.autoBlock.getValue() == 4)
+                                            || (killAura.autoBlock.getValue() == 3 && killAura.blockTick == 0)) {
+                                        EventManager.call(new AttackEvent(killAura.getTarget()));
+                                        mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
+                                        mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(killAura.getTarget(), C02PacketUseEntity.Action.ATTACK));
+                                        mc.thePlayer.motionX *= 0.6D;
+                                        mc.thePlayer.motionZ *= 0.6D;
+                                        mc.thePlayer.setSprinting(false);
+                                    }
                                 }
                             }
                         }
@@ -279,17 +285,19 @@ public class Velocity extends Module {
                 this.slapReduceTicks--;
                 KillAura killAura = (KillAura) Myau.moduleManager.getModule(KillAura.class);
                 if (killAura != null && killAura.isEnabled() && killAura.getTarget() != null) {
-                    EntityLivingBase target = killAura.getTarget();
-                    if (!((IAccessorEntity) mc.thePlayer).getIsInWeb() && mc.thePlayer.isSprinting() && MoveUtil.isMoving() && target != mc.thePlayer && !this.badPackets()) {
-                        EventManager.call(new AttackEvent(target));
-                        mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
-                        mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(target, C02PacketUseEntity.Action.ATTACK));
-                        mc.thePlayer.motionX *= 0.6;
-                        mc.thePlayer.motionZ *= 0.6;
-                        mc.thePlayer.setSprinting(false);
-                        this.slapAnInt++;
-                        if (this.debugLog.getValue()) {
-                            ChatUtil.sendFormatted(Myau.clientName + "Attack reduce " + this.slapAnInt);
+                    if (!killAura.isPlayerBlocking()) {
+                        EntityLivingBase target = killAura.getTarget();
+                        if (!((IAccessorEntity) mc.thePlayer).getIsInWeb() && mc.thePlayer.isSprinting() && MoveUtil.isMoving() && target != mc.thePlayer && !this.badPackets()) {
+                            EventManager.call(new AttackEvent(target));
+                            mc.getNetHandler().addToSendQueue(new C0APacketAnimation());
+                            mc.getNetHandler().addToSendQueue(new C02PacketUseEntity(target, C02PacketUseEntity.Action.ATTACK));
+                            mc.thePlayer.motionX *= 0.6;
+                            mc.thePlayer.motionZ *= 0.6;
+                            mc.thePlayer.setSprinting(false);
+                            this.slapAnInt++;
+                            if (this.debugLog.getValue()) {
+                                ChatUtil.sendFormatted(Myau.clientName + "Attack reduce " + this.slapAnInt);
+                            }
                         }
                     }
                 }

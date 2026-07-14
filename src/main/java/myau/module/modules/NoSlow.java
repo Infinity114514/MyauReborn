@@ -25,12 +25,12 @@ import java.util.Random;
 public class NoSlow extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
-    public final ModeProperty swordMode = new ModeProperty("Sword Mode", 1, new String[]{"None", "Vanilla", "Hypixel"});
+    public static final ModeProperty swordMode = new ModeProperty("Sword Mode", 1, new String[]{"None", "Vanilla", "Hypixel"});
     public final IntProperty swapDelay = new IntProperty("Swap Delay", 0, 0, 3, () -> swordMode.getValue() == 2);
     public final BooleanProperty noAttack = new BooleanProperty("No Attack", false, () -> swordMode.getValue() == 2);
     public final PercentProperty swordMotion = new PercentProperty("Sword Motion", 100, () -> this.swordMode.getValue() != 0);
     public final BooleanProperty swordSprint = new BooleanProperty("Sword Sprint", true, () -> this.swordMode.getValue() != 0);
-    public final BooleanProperty onlyKillAuraAutoBlock = new BooleanProperty("only-autoblock", false, () -> this.swordMode.getValue() != 0);
+    public final BooleanProperty onlyKillAuraAutoBlock = new BooleanProperty("Only Kill Aura Auto Block", false, () -> this.swordMode.getValue() != 0);
     public final ModeProperty foodMode = new ModeProperty("Food Mode", 0, new String[]{"None", "Vanilla", "Float"});
     public final PercentProperty foodMotion = new PercentProperty("Food Motion", 100, () -> this.foodMode.getValue() != 0);
     public final BooleanProperty foodSprint = new BooleanProperty("Food Sprint", true, () -> this.foodMode.getValue() != 0);
@@ -71,15 +71,18 @@ public class NoSlow extends Module {
     }
 
     public boolean isAnyActive() {
-        if (this.swordMode.getValue() != 2) {
-            return mc.thePlayer.isUsingItem() && (this.isSwordActive() || this.isFoodActive() || this.isBowActive());
-        } else if (this.swordMode.getValue() == 2 && isSwordActive()) {
-            KillAura killAura = (KillAura) Myau.moduleManager.getModule(KillAura.class);
-            if (!noAttack.getValue() || !((killAura.blockTick == 0 && killAura.autoBlock.getValue() == 3) || (killAura.autoBlock.getValue() == 4 && killAura.blockTick == 0) && killAura.isEnabled() && killAura.isPlayerBlocking())) {
-                return delay == 0;
-            }
+        // 核心修改 1：只要玩家正在使用物品，就进行相应的判断逻辑
+        if (!mc.thePlayer.isUsingItem()) {
+            return false;
         }
-        return false;
+
+        // 若为 Hypixel 模式且玩家正手持剑
+        if (this.swordMode.getValue() == 2 && this.isSwordActive()) {
+            return delay <= 0;
+        }
+
+        // 兼容原版的弓和食物以及其他剑的模式
+        return this.isSwordActive() || this.isFoodActive() || this.isBowActive();
     }
 
     public boolean canSprint() {
@@ -101,21 +104,22 @@ public class NoSlow extends Module {
     @EventTarget
     public void onUpdate(UpdateEvent event) {
         if (!this.isEnabled()) return;
+
+        // 核心修改 2：仅依赖于手持剑和 isUsingItem 作为触发条件
         if (ItemUtil.isHoldingSword() && mc.thePlayer.isUsingItem()) {
             if (isSwordActive()) {
                 if (this.swordMode.getValue() == 2) {
                     if (event.getType() == EventType.PRE) {
                         delay--;
                         if (delay < 0) {
-                            KillAura killAura = (KillAura) Myau.moduleManager.getModule(KillAura.class);
-                            if (!noAttack.getValue() || !((killAura.blockTick == 0 && killAura.autoBlock.getValue() == 3)  || (killAura.autoBlock.getValue() != 4 && killAura.autoBlock.getValue() != 3) || (killAura.autoBlock.getValue() == 4 && killAura.blockTick == 0) && killAura.isEnabled() && killAura.isPlayerBlocking())) {
-                                int randomSlot = new Random().nextInt(9);
-                                while (randomSlot == mc.thePlayer.inventory.currentItem) {
-                                    randomSlot = new Random().nextInt(9);
-                                }
-                                PacketUtil.sendPacket(new C09PacketHeldItemChange(randomSlot));
-                                PacketUtil.sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
+                            // 移除了关于 KillAura 具体 autoBlock 模式的限制，直接执行发包逻辑
+                            int randomSlot = new Random().nextInt(9);
+                            while (randomSlot == mc.thePlayer.inventory.currentItem) {
+                                randomSlot = new Random().nextInt(9);
                             }
+                            PacketUtil.sendPacket(new C09PacketHeldItemChange(randomSlot));
+                            PacketUtil.sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
+
                             post = true;
                             delay = swapDelay.getValue();
                         }

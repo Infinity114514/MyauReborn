@@ -32,6 +32,7 @@ public class ClickGui extends GuiScreen {
         combatModules.add(Myau.moduleManager.getModule(AimAssist.class));
         combatModules.add(Myau.moduleManager.getModule(AutoClicker.class));
         combatModules.add(Myau.moduleManager.getModule(AutoSwap.class));
+        combatModules.add(Myau.moduleManager.getModule(BlockHit.class));
         combatModules.add(Myau.moduleManager.getModule(KillAura.class));
         combatModules.add(Myau.moduleManager.getModule(KnockbackDelay.class));
         combatModules.add(Myau.moduleManager.getModule(Wtap.class));

@@ -8,5 +8,6 @@ public enum BlinkModules {
     NO_FALL,
     KEEPSPRINT,
     DISPLACE,
-    NOSLOW
+    NOSLOW,
+    BLOCKHIT
 }
